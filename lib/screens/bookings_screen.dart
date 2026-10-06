@@ -44,9 +44,7 @@ class _BookingsScreenState extends State<BookingsScreen> {
   }
 
   // Cancel booking confirmation dialog (AlertDialog from cheat sheet)
-  void _showCancelDialog(BuildContext context) {
-    const primaryTeal = Color(0xFF0F756D);
-
+  void _showCancelDialog() {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -88,28 +86,29 @@ class _BookingsScreenState extends State<BookingsScreen> {
   }
 
   // Reschedule booking dialog
-  void _showRescheduleDialog(BuildContext context) {
+  Future<void> _showRescheduleDialog() async {
     const primaryTeal = Color(0xFF0F756D);
 
-    showDatePicker(
+    final picked = await showDatePicker(
       context: context,
       initialDate: DateTime(2026, 5, 6),
       firstDate: DateTime(2026, 5, 1),
       lastDate: DateTime(2027, 12, 31),
       helpText: 'Select new date',
       confirmText: 'RESCHEDULE',
-    ).then((picked) {
-      if (picked != null && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Rescheduled to ${picked.day}/${picked.month}/${picked.year}',
-            ),
-            backgroundColor: primaryTeal,
+    );
+
+    if (picked != null) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Rescheduled to ${picked.day}/${picked.month}/${picked.year}',
           ),
-        );
-      }
-    });
+          backgroundColor: primaryTeal,
+        ),
+      );
+    }
   }
 
   @override
@@ -374,7 +373,7 @@ class _BookingsScreenState extends State<BookingsScreen> {
                           child: SizedBox(
                             height: 36,
                             child: OutlinedButton(
-                              onPressed: () => _showRescheduleDialog(context),
+                              onPressed: _showRescheduleDialog,
                               style: OutlinedButton.styleFrom(
                                 side: const BorderSide(color: primaryTeal),
                                 shape: RoundedRectangleBorder(
@@ -397,7 +396,7 @@ class _BookingsScreenState extends State<BookingsScreen> {
                           child: SizedBox(
                             height: 36,
                             child: OutlinedButton(
-                              onPressed: () => _showCancelDialog(context),
+                              onPressed: _showCancelDialog,
                               style: OutlinedButton.styleFrom(
                                 side: const BorderSide(color: Color(0xFFEF4444)),
                                 shape: RoundedRectangleBorder(
