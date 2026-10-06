@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'login_screen.dart';
 
 class BookingsScreen extends StatefulWidget {
   final int initialTabIndex;
@@ -587,7 +588,15 @@ class _BookingsScreenState extends State<BookingsScreen> {
                     icon: Icons.logout_rounded,
                     title: 'Logout',
                     isDestructive: true,
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const LoginScreen(),
+                        ),
+                        (route) => false,
+                      );
+                    },
                   ),
                 ],
               ),
