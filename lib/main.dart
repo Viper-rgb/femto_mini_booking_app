@@ -1,8 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'providers/service_provider.dart';
 import 'screens/home_screen.dart';
 
 void main() {
-  runApp(const FamtoBookingApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (_) => ServiceProvider()..fetchServices(),
+        ),
+      ],
+      child: const FamtoBookingApp(),
+    ),
+  );
 }
 
 class FamtoBookingApp extends StatelessWidget {

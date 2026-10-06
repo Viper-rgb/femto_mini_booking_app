@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../models/service_model.dart';
+import '../providers/service_provider.dart';
 import 'confirmation_screen.dart';
 
 class BookingScreen extends StatefulWidget {
@@ -513,27 +516,51 @@ class _BookingScreenState extends State<BookingScreen> {
                     final fullDateStr =
                         '${selectedDate['day']}, ${selectedDate['date']} ${selectedDate['month']} 2026';
 
+                    final serviceModel = ServiceModel(
+                      id: 'srv_${DateTime.now().millisecondsSinceEpoch}',
+                      title: widget.serviceData?['title'] ?? 'Ceiling Fan Repair',
+                      category: 'Electrician',
+                      description: 'Doorstep service appointment',
+                      price: widget.serviceData?['price'] ?? '₹499',
+                      duration: widget.serviceData?['duration'] ?? '45–60 min',
+                      rating: widget.serviceData?['rating'] ?? '4.8',
+                      reviews: widget.serviceData?['reviews'] ?? '1.2k',
+                      imageUrl: widget.serviceData?['imageUrl'] ??
+                          'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=500&q=80',
+                      includedItems: ['Standard inspection', 'Service warranty'],
+                    );
+
+                    final bookingModel = BookingModel(
+                      id: 'bk_${DateTime.now().millisecondsSinceEpoch}',
+                      bookingId: '#FAMTO-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}',
+                      service: serviceModel,
+                      date: fullDateStr,
+                      timeSlot: _selectedTimeSlot,
+                      customerName: _nameController.text.trim(),
+                      customerPhone: _phoneController.text.trim(),
+                      address: _addressController.text.trim(),
+                      status: 'Confirmed',
+                    );
+
+                    context.read<ServiceProvider>().addBooking(bookingModel);
+
                     Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (context) => ConfirmationScreen(
                           bookingData: {
-                            'title': widget.serviceData?['title'] ??
-                                'Ceiling Fan Repair',
-                            'price': widget.serviceData?['price'] ?? '₹499',
-                            'duration': widget.serviceData?['duration'] ??
-                                '45–60 min',
-                            'rating': widget.serviceData?['rating'] ?? '4.8',
-                            'reviews':
-                                widget.serviceData?['reviews'] ?? '1.2k',
-                            'imageUrl': widget.serviceData?['imageUrl'] ??
-                                'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=500&q=80',
-                            'date': fullDateStr,
-                            'timeSlot': _selectedTimeSlot,
-                            'address': _addressController.text.trim(),
-                            'customerName': _nameController.text.trim(),
-                            'customerPhone': _phoneController.text.trim(),
-                            'bookingId': '#FAMTO-584726',
+                            'title': bookingModel.service.title,
+                            'price': bookingModel.service.price,
+                            'duration': bookingModel.service.duration,
+                            'rating': bookingModel.service.rating,
+                            'reviews': bookingModel.service.reviews,
+                            'imageUrl': bookingModel.service.imageUrl,
+                            'date': bookingModel.date,
+                            'timeSlot': bookingModel.timeSlot,
+                            'address': bookingModel.address,
+                            'customerName': bookingModel.customerName,
+                            'customerPhone': bookingModel.customerPhone,
+                            'bookingId': bookingModel.bookingId,
                           },
                         ),
                       ),

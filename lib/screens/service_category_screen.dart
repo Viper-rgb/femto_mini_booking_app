@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../models/service_model.dart';
+import '../providers/service_provider.dart';
 import 'service_details_screen.dart';
 
 class ServiceCategoryScreen extends StatefulWidget {
@@ -20,49 +23,14 @@ class _ServiceCategoryScreenState extends State<ServiceCategoryScreen> {
   // Filter chips options
   final List<String> _filters = ['All', 'Wiring', 'Repair', 'Installation'];
 
-  // Mock services data for category screen
-  final List<Map<String, dynamic>> _services = [
-    {
-      'title': 'Ceiling Fan Repair',
-      'description': 'Fixing noisy, slow or non-working ceiling fans.',
-      'rating': '4.8',
-      'reviews': '1.2k',
-      'duration': '45-60 min',
-      'price': '₹499',
-      'imageUrl':
-          'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=500&q=80',
-    },
-    {
-      'title': 'Electrical Wiring',
-      'description': 'New wiring, rewiring and panel installation.',
-      'rating': '4.7',
-      'reviews': '856',
-      'duration': '60-90 min',
-      'price': '₹799',
-      'imageUrl':
-          'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=500&q=80',
-    },
-    {
-      'title': 'Switch Board Installation',
-      'description': 'Installation and replacement of switch boards.',
-      'rating': '4.6',
-      'reviews': '942',
-      'duration': '20-45 min',
-      'price': '₹399',
-      'imageUrl':
-          'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=500&q=80',
-    },
-    {
-      'title': 'MCB & DB Installation',
-      'description': 'Safety switch and distribution board setup.',
-      'rating': '4.7',
-      'reviews': '421',
-      'duration': '60-90 min',
-      'price': '₹699',
-      'imageUrl':
-          'https://images.unsplash.com/photo-1544725176-7c40e5a71c5e?w=500&q=80',
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    // Pattern A: Trigger fetch once on screen init
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<ServiceProvider>().fetchServices();
+    });
+  }
 
   @override
   void dispose() {
@@ -74,9 +42,19 @@ class _ServiceCategoryScreenState extends State<ServiceCategoryScreen> {
   Widget build(BuildContext context) {
     const primaryTeal = Color(0xFF0F756D);
 
+    // Pattern A: React to provider state
+    final provider = context.watch<ServiceProvider>();
+
+    // Map filters to category query
+    final displayedServices = provider.services.where((s) {
+      if (_selectedFilterIndex == 0) return true;
+      final filterTag = _filters[_selectedFilterIndex].toLowerCase();
+      return s.title.toLowerCase().contains(filterTag) ||
+          s.description.toLowerCase().contains(filterTag);
+    }).toList();
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFB),
-      // Top AppBar
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
@@ -108,7 +86,6 @@ class _ServiceCategoryScreenState extends State<ServiceCategoryScreen> {
           ),
         ],
       ),
-
       body: Column(
         children: [
           // Top search & filters container
@@ -181,9 +158,7 @@ class _ServiceCategoryScreenState extends State<ServiceCategoryScreen> {
                               isSelected ? FontWeight.w600 : FontWeight.w500,
                         ),
                         side: BorderSide(
-                          color: isSelected
-                              ? primaryTeal
-                              : Colors.grey.shade300,
+                          color: isSelected ? primaryTeal : Colors.grey.shade300,
                         ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(18),
@@ -203,227 +178,327 @@ class _ServiceCategoryScreenState extends State<ServiceCategoryScreen> {
 
           const SizedBox(height: 8),
 
-          // Services List
+          // Content area handling: 1. Loading, 2. Error, 3. Empty, 4. Data
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              itemCount: _services.length + 1, // +1 for loading indicator at end
-              itemBuilder: (context, index) {
-                // Bottom loading indicator
-                if (index == _services.length) {
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 24.0),
-                    child: Center(
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: primaryTeal,
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Text(
-                            'Loading more services...',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey.shade500,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                }
+            child: _buildContent(provider, displayedServices, primaryTeal),
+          ),
+        ],
+      ),
+    );
+  }
 
-                final service = _services[index];
+  Widget _buildContent(
+    ServiceProvider provider,
+    List<ServiceModel> services,
+    Color primaryTeal,
+  ) {
+    // 1. Loading State (Pattern A: spinner)
+    if (provider.isLoading) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(color: Color(0xFF0F756D)),
+            SizedBox(height: 14),
+            Text(
+              'Fetching available services...',
+              style: TextStyle(
+                fontSize: 13,
+                color: Color(0xFF64748B),
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
 
-                return Card(
-                  elevation: 0,
-                  margin: const EdgeInsets.only(bottom: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    side: BorderSide(color: Colors.grey.shade200),
-                  ),
-                  color: Colors.white,
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(16),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ServiceDetailsScreen(
-                            serviceData: service,
-                          ),
-                        ),
-                      );
+    // 2. Error State (Pattern A: error view)
+    if (provider.errorMessage.isNotEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.error_outline_rounded,
+                color: Colors.redAccent,
+                size: 48,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                provider.errorMessage,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: Color(0xFF1E293B),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () {
+                  context.read<ServiceProvider>().fetchServices();
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: primaryTeal,
+                  foregroundColor: Colors.white,
+                ),
+                child: const Text('Try Again'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // 3. Empty State
+    if (services.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.search_off_rounded,
+              size: 54,
+              color: Colors.grey.shade400,
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              'No services found',
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1E293B),
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Try selecting another filter or search term.',
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey.shade500,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // 4. Data State (Pattern A: display items in ListView.builder)
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      itemCount: services.length + 1, // +1 for loading more indicator
+      itemBuilder: (context, index) {
+        if (index == services.length) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 20.0),
+            child: Center(
+              child: Text(
+                'Showing ${services.length} services',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey.shade500,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          );
+        }
+
+        final service = services[index];
+
+        return Card(
+          elevation: 0,
+          margin: const EdgeInsets.only(bottom: 14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(color: Colors.grey.shade200),
+          ),
+          color: Colors.white,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(16),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ServiceDetailsScreen(
+                    serviceData: {
+                      'title': service.title,
+                      'price': service.price,
+                      'duration': service.duration,
+                      'rating': service.rating,
+                      'reviews': service.reviews,
+                      'imageUrl': service.imageUrl,
                     },
-                    child: Padding(
-                      padding: const EdgeInsets.all(12.0),
-                    child: Row(
+                  ),
+                ),
+              );
+            },
+            child: Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Service thumbnail image
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.network(
+                      service.imageUrl,
+                      width: 85,
+                      height: 85,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          width: 85,
+                          height: 85,
+                          color: const Color(0xFFE6F4F1),
+                          child: const Icon(
+                            Icons.handyman_outlined,
+                            color: Color(0xFF0F756D),
+                            size: 32,
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+
+                  const SizedBox(width: 12),
+
+                  // Service info & Book button
+                  Expanded(
+                    child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Service thumbnail image
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: Image.network(
-                            service['imageUrl'] as String,
-                            width: 85,
-                            height: 85,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Container(
-                                width: 85,
-                                height: 85,
-                                color: const Color(0xFFE6F4F1),
-                                child: const Icon(
-                                  Icons.handyman_outlined,
-                                  color: primaryTeal,
-                                  size: 32,
-                                ),
-                              );
-                            },
+                        Text(
+                          service.title,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF1E293B),
                           ),
                         ),
+                        const SizedBox(height: 4),
+                        Text(
+                          service.description,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade600,
+                            height: 1.3,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
 
-                        const SizedBox(width: 12),
-
-                        // Service info & Book button
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                service['title'] as String,
-                                style: const TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w700,
-                                  color: Color(0xFF1E293B),
-                                ),
+                        // Rating and Duration
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.star_rounded,
+                              color: Colors.amber,
+                              size: 16,
+                            ),
+                            const SizedBox(width: 3),
+                            Text(
+                              service.rating,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
                               ),
-                              const SizedBox(height: 4),
-                              Text(
-                                service['description'] as String,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(width: 2),
+                            Text(
+                              '(${service.reviews})',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Colors.grey.shade500,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Icon(
+                              Icons.access_time_rounded,
+                              color: Colors.grey.shade500,
+                              size: 14,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              service.duration,
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Colors.grey.shade600,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 10),
+
+                        // Price & Book button
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              service.price,
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w800,
+                                color: primaryTeal,
+                              ),
+                            ),
+                            ElevatedButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => ServiceDetailsScreen(
+                                      serviceData: {
+                                        'title': service.title,
+                                        'price': service.price,
+                                        'duration': service.duration,
+                                        'rating': service.rating,
+                                        'reviews': service.reviews,
+                                        'imageUrl': service.imageUrl,
+                                      },
+                                    ),
+                                  ),
+                                );
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: primaryTeal,
+                                foregroundColor: Colors.white,
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 18,
+                                  vertical: 6,
+                                ),
+                                minimumSize: const Size(64, 32),
+                              ),
+                              child: const Text(
+                                'Book',
                                 style: TextStyle(
                                   fontSize: 12,
-                                  color: Colors.grey.shade600,
-                                  height: 1.3,
+                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              const SizedBox(height: 8),
-
-                              // Rating and Duration
-                              Row(
-                                children: [
-                                  const Icon(
-                                    Icons.star_rounded,
-                                    color: Colors.amber,
-                                    size: 16,
-                                  ),
-                                  const SizedBox(width: 3),
-                                  Text(
-                                    '${service['rating']}',
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.black87,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 2),
-                                  Text(
-                                    '(${service['reviews']})',
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      color: Colors.grey.shade500,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Icon(
-                                    Icons.access_time_rounded,
-                                    color: Colors.grey.shade500,
-                                    size: 14,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    service['duration'] as String,
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      color: Colors.grey.shade600,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ],
-                              ),
-
-                              const SizedBox(height: 10),
-
-                              // Price & Book button
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    service['price'] as String,
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w800,
-                                      color: primaryTeal,
-                                    ),
-                                  ),
-                                  ElevatedButton(
-                                    onPressed: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) =>
-                                              ServiceDetailsScreen(
-                                            serviceData: service,
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: primaryTeal,
-                                      foregroundColor: Colors.white,
-                                      elevation: 0,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 18,
-                                        vertical: 6,
-                                      ),
-                                      minimumSize: const Size(64, 32),
-                                    ),
-                                    child: const Text(
-                                      'Book',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
                   ),
-                ),
-              );
-              },
+                ],
+              ),
             ),
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
