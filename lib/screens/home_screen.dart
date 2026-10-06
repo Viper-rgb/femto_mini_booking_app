@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'service_category_screen.dart';
+import 'service_details_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -339,8 +340,19 @@ class _HomeScreenState extends State<HomeScreen> {
                       const SizedBox(width: 14),
                   itemBuilder: (context, index) {
                     final service = _popularServices[index];
-                    return Container(
-                      width: 165,
+                    return GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ServiceDetailsScreen(
+                              serviceData: service,
+                            ),
+                          ),
+                        );
+                      },
+                      child: Container(
+                        width: 165,
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(16),
@@ -454,8 +466,9 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ],
                       ),
-                    );
-                  },
+                    ),
+                  );
+                },
                 ),
               ),
 

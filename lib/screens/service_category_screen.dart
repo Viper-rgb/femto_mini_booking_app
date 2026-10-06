@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'service_details_screen.dart';
 
 class ServiceCategoryScreen extends StatefulWidget {
   final String categoryTitle;
@@ -249,8 +250,20 @@ class _ServiceCategoryScreenState extends State<ServiceCategoryScreen> {
                     side: BorderSide(color: Colors.grey.shade200),
                   ),
                   color: Colors.white,
-                  child: Padding(
-                    padding: const EdgeInsets.all(12.0),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(16),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ServiceDetailsScreen(
+                            serviceData: service,
+                          ),
+                        ),
+                      );
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.all(12.0),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -364,7 +377,17 @@ class _ServiceCategoryScreenState extends State<ServiceCategoryScreen> {
                                     ),
                                   ),
                                   ElevatedButton(
-                                    onPressed: () {},
+                                    onPressed: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              ServiceDetailsScreen(
+                                            serviceData: service,
+                                          ),
+                                        ),
+                                      );
+                                    },
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: primaryTeal,
                                       foregroundColor: Colors.white,
@@ -394,7 +417,8 @@ class _ServiceCategoryScreenState extends State<ServiceCategoryScreen> {
                       ],
                     ),
                   ),
-                );
+                ),
+              );
               },
             ),
           ),
