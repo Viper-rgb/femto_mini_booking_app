@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'booking_screen.dart';
 
 class ServiceDetailsScreen extends StatefulWidget {
   final Map<String, dynamic>? serviceData;
@@ -324,7 +325,14 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
                 height: 48,
                 child: ElevatedButton(
                   onPressed: () {
-                    // Navigate to Screen 4 (Booking Screen)
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => BookingScreen(
+                          serviceData: widget.serviceData,
+                        ),
+                      ),
+                    );
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: primaryTeal,
