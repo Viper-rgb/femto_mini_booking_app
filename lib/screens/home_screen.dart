@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'service_category_screen.dart';
 import 'service_details_screen.dart';
+import 'bookings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -540,9 +541,18 @@ class _HomeScreenState extends State<HomeScreen> {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentNavIndex,
         onTap: (index) {
-          setState(() {
-            _currentNavIndex = index;
-          });
+          if (index != 0) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const BookingsScreen(),
+              ),
+            );
+          } else {
+            setState(() {
+              _currentNavIndex = index;
+            });
+          }
         },
         selectedItemColor: primaryTeal,
         unselectedItemColor: Colors.grey.shade500,

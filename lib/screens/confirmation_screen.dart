@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'home_screen.dart';
+import 'bookings_screen.dart';
 
 class ConfirmationScreen extends StatelessWidget {
   final Map<String, dynamic>? bookingData;
@@ -451,12 +452,11 @@ class ConfirmationScreen extends StatelessWidget {
                 height: 48,
                 child: ElevatedButton(
                   onPressed: () {
-                    Navigator.pushAndRemoveUntil(
+                    Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const HomeScreen(),
+                        builder: (context) => const BookingsScreen(),
                       ),
-                      (route) => false,
                     );
                   },
                   style: ElevatedButton.styleFrom(
